@@ -57,3 +57,18 @@ def test_unknown_model_warns_instead_of_failing():
     )
     assert result["warning"]
     assert result["estimated_price"] > 0
+    # A recent large Toyota with an unknown name should follow other Toyotas,
+    # not the pooled rare-model bucket.
+    large = predict_car(
+        "Toyota",
+        "Not A Real Model",
+        "",
+        2022,
+        2700,
+        "Automatic",
+        "Diesel",
+        40000,
+        asking_price=180,
+    )
+    assert large["estimated_price"] > 80
+    assert large["price_low"] <= large["estimated_price"] <= large["price_high"]

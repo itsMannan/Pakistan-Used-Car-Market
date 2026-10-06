@@ -90,6 +90,11 @@ class GroupRareCategories(BaseEstimator, TransformerMixin):
             self.keep_.append(keep)
         return self
 
+    def get_feature_names_out(self, input_features=None):
+        if input_features is None:
+            return np.asarray([f"x{i}" for i in range(len(self.keep_))], dtype=object)
+        return np.asarray(input_features, dtype=object)
+
     def transform(self, X):
         frame = np.asarray(X).astype(str)
         out = np.empty(frame.shape, dtype=object)
@@ -252,6 +257,7 @@ def _cv_baseline(X: pd.DataFrame, y: np.ndarray, bins: np.ndarray) -> dict:
         "model": "median_make_model",
         "cv_mae_mean": float(np.mean(scores)),
         "cv_mae_std": float(np.std(scores)),
+        "best_params": None,
     }
 
 
