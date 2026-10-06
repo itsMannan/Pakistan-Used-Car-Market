@@ -378,9 +378,9 @@ def train() -> dict:
     X_train = X.iloc[train_idx].reset_index(drop=True)
     X_test = X.iloc[test_idx].reset_index(drop=True)
     y_train, y_test = y[train_idx], y[test_idx]
-    bins_train = pd.qcut(
-        np.expm1(y_train), q=5, labels=False, duplicates="drop"
-    ).to_numpy()
+    bins_train = np.asarray(
+        pd.qcut(np.expm1(y_train), q=5, labels=False, duplicates="drop")
+    )
 
     print("baseline")
     rows = [_cv_baseline(X_train, y_train, bins_train)]
