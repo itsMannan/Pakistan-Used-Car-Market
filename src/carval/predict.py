@@ -78,27 +78,31 @@ def predict_car(
 
     bundle = load_bundle()
     canonical_make, canonical_model, warning = _resolve_names(bundle, make, model)
-    row = pd.DataFrame(
-        [
-            {
-                "make": canonical_make,
-                "model_name": canonical_model,
-                "variant": variant or "",
-                "year": year,
-                "fuel": fuel_type,
-                "transmission": transmission,
-                "engine_cc": engine,
-                "battery_kwh": battery,
-                "km": float(km_driven),
-            }
-        ]
-    )
-    featured = add_features(row)
-    log_pred = float(bundle["pipeline"].predict(featured[FEATURE_COLUMNS])[0])
-    point, low, high = apply_log_interval([log_pred], bundle["q_low"], bundle["q_high"])
-    estimated = float(point[0])
-    price_low = float(low[0])
-    price_high = float(high[0])
+    peers = bundle["models_by_make"].get(canonical_make, [])
+    base = {
+        "make": canonical_make,
+        "variant": variant or "",
+        "year": year,
+        "fuel": fuel_type,
+        "transmission": transmission,
+        "engine_cc": engine,
+        "battery_kwh": battery,
+        "km": float(km_driven),
+    }
+    if warning and peers:
+        # An unseen name would be lumped in with every rare model. Price it as
+        # a typical car of this make instead.
+        estimated, price_low, price_high, featured = _median_of_make(
+            bundle, base, peers
+        )
+        warning = (
+            f"'{model}' is not a common {canonical_make} model in the training data. "
+            f"The estimate is the median across common {canonical_make} models."
+        )
+    else:
+        row = pd.DataFrame([{**base, "model_name": canonical_model}])
+        featured = add_features(row)
+        estimated, price_low, price_high = _predict_one(bundle, featured)
     result = {
         "estimated_price": round(estimated, 2),
         "price_low": round(price_low, 2),
@@ -115,7 +119,71 @@ def predict_car(
     return result
 
 
+def _predict_one(bundle: dict, featured: pd.DataFrame) -> tuple[float, float, float]:
+    log_pred = float(bundle["pipeline"].predict(featured[FEATURE_COLUMNS])[0])
+    point, low, high = apply_log_interval([log_pred], bundle["q_low"], bundle["q_high"])
+    return float(point[0]), float(low[0]), float(high[0])
+
+
+def _median_of_make(
+    bundle: dict, base: dict, models: list[str]
+) -> tuple[float, float, float, pd.DataFrame]:
+    scored = []
+    for model_name in models:
+        featured = add_features(pd.DataFrame([{**base, "model_name": model_name}]))
+        estimated, low, high = _predict_one(bundle, featured)
+        scored.append((estimated, low, high, featured))
+    scored.sort(key=lambda item: item[0])
+    return scored[len(scored) // 2]
+
+
 def local_factors(bundle: dict, featured: pd.DataFrame, top_n: int = 4) -> list[str]:
+    try:
+        phrases = _tree_factors(bundle, featured, top_n)
+    except Exception:
+        phrases = _ablation_factors(bundle, featured, top_n)
+    return phrases
+
+
+def _phrases(effects: list[tuple[str, float]], top_n: int, cutoff: float) -> list[str]:
+    effects = sorted(effects, key=lambda item: abs(item[1]), reverse=True)
+    phrases = []
+    for column, delta in effects:
+        if abs(delta) < cutoff:
+            continue
+        label = _FACTOR_LABELS.get(column, column)
+        direction = "raises" if delta > 0 else "lowers"
+        phrases.append(f"{label} {direction} the estimate")
+        if len(phrases) == top_n:
+            break
+    return phrases
+
+
+def _tree_factors(bundle: dict, featured: pd.DataFrame, top_n: int) -> list[str]:
+    import xgboost as xgb
+
+    pipe = bundle["pipeline"]
+    model = pipe.named_steps["model"]
+    prep = pipe.named_steps["prep"]
+    transformed = prep.transform(featured[FEATURE_COLUMNS])
+    names = list(prep.get_feature_names_out())
+    contrib = model.get_booster().predict(xgb.DMatrix(transformed), pred_contribs=True)[
+        0
+    ]
+    effects = []
+    for idx, name in enumerate(names):
+        if name.startswith("num__"):
+            effects.append((name.split("__", 1)[1], float(contrib[idx])))
+        elif name.startswith("cat__") and transformed[0, idx] > 0.5:
+            rest = name[5:]
+            for column in ("model_name", "variant_tier", "make", "fuel"):
+                if rest.startswith(column + "_"):
+                    effects.append((column, float(contrib[idx])))
+                    break
+    return _phrases(effects, top_n, cutoff=0.02)
+
+
+def _ablation_factors(bundle: dict, featured: pd.DataFrame, top_n: int) -> list[str]:
     base = float(bundle["pipeline"].predict(featured[FEATURE_COLUMNS])[0])
     effects = []
     for column, typical in bundle["medians"].items():
@@ -128,17 +196,7 @@ def local_factors(bundle: dict, featured: pd.DataFrame, top_n: int = 4) -> list[
         alt[column] = typical
         delta = base - float(bundle["pipeline"].predict(alt[FEATURE_COLUMNS])[0])
         effects.append((column, delta))
-    effects.sort(key=lambda item: abs(item[1]), reverse=True)
-    phrases = []
-    for column, delta in effects:
-        if abs(delta) < 0.015:
-            continue
-        label = _FACTOR_LABELS.get(column, column)
-        direction = "raises" if delta > 0 else "lowers"
-        phrases.append(f"{label} {direction} the estimate")
-        if len(phrases) == top_n:
-            break
-    return phrases
+    return _phrases(effects, top_n, cutoff=0.015)
 
 
 def _resolve_names(bundle: dict, make: str, model: str) -> tuple[str, str, str | None]:
