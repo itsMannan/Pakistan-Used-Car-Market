@@ -1,0 +1,15 @@
+{
+  "rows_raw": 60555,
+  "dropped_missing_price": 999,
+  "dropped_duplicates": 7565,
+  "dropped_unparsed_title": 0,
+  "dropped_year_out_of_range": 460,
+  "converted_crore_to_lakh": 2373,
+  "dropped_unresolvable_price": 65,
+  "km_set_missing": 1613,
+  "rows_engine_cc_missing": 358,
+  "rows_with_battery_kwh": 193,
+  "rows_clean": 51466,
+  "rows_dropped_total": 9089,
+  "share_kept": 0.8499
+}

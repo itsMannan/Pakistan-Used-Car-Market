@@ -1,0 +1,295 @@
+{
+  "trained_at": "2026-10-06T08:15:07+00:00",
+  "winner": "xgboost",
+  "features": [
+    "car_age",
+    "log_km",
+    "km_per_year",
+    "engine_cc",
+    "battery_kwh",
+    "is_hybrid",
+    "is_electric",
+    "transmission_auto",
+    "make",
+    "model_name",
+    "fuel",
+    "variant_tier"
+  ],
+  "target": "log1p(price in lakh PKR)",
+  "reference_year": 2024,
+  "random_state": 42,
+  "test_size": 0.2,
+  "cv_folds": 5,
+  "n_train": 41172,
+  "n_test": 10294,
+  "cleaning": {
+    "rows_raw": 60555,
+    "dropped_missing_price": 999,
+    "dropped_duplicates": 7565,
+    "dropped_unparsed_title": 0,
+    "dropped_year_out_of_range": 460,
+    "converted_crore_to_lakh": 2373,
+    "dropped_unresolvable_price": 65,
+    "km_set_missing": 1613,
+    "rows_engine_cc_missing": 358,
+    "rows_with_battery_kwh": 193,
+    "rows_clean": 51466,
+    "rows_dropped_total": 9089,
+    "share_kept": 0.8499
+  },
+  "comparison": [
+    {
+      "model": "xgboost",
+      "cv_mae_mean": 3.925948259060636,
+      "cv_mae_std": 0.08081286772574882,
+      "best_params": {
+        "model__subsample": 0.85,
+        "model__n_estimators": 400,
+        "model__max_depth": 7,
+        "model__learning_rate": 0.1
+      }
+    },
+    {
+      "model": "lightgbm",
+      "cv_mae_mean": 4.222434871503025,
+      "cv_mae_std": 0.23414265020108355,
+      "best_params": {
+        "model__num_leaves": 63,
+        "model__n_estimators": 300,
+        "model__min_child_samples": 20,
+        "model__learning_rate": 0.05
+      }
+    },
+    {
+      "model": "catboost",
+      "cv_mae_mean": 4.381155059177166,
+      "cv_mae_std": 0.17469931622616253,
+      "best_params": {
+        "model__learning_rate": 0.08,
+        "model__iterations": 400,
+        "model__depth": 8
+      }
+    },
+    {
+      "model": "hist_gradient_boosting",
+      "cv_mae_mean": 4.3960664199733,
+      "cv_mae_std": 0.18289477058444603,
+      "best_params": {
+        "model__min_samples_leaf": 15,
+        "model__max_iter": 350,
+        "model__max_depth": 10,
+        "model__learning_rate": 0.1
+      }
+    },
+    {
+      "model": "ridge",
+      "cv_mae_mean": 6.538009403601552,
+      "cv_mae_std": 0.2169234725775127,
+      "best_params": {
+        "model__alpha": 0.1
+      }
+    },
+    {
+      "model": "random_forest",
+      "cv_mae_mean": 7.9346825007029125,
+      "cv_mae_std": 0.23358757165440444,
+      "best_params": {
+        "model__n_estimators": 180,
+        "model__min_samples_leaf": 2,
+        "model__max_depth": 18
+      }
+    },
+    {
+      "model": "median_make_model",
+      "cv_mae_mean": 13.64923518943264,
+      "cv_mae_std": 0.21942186924395898,
+      "best_params": null
+    }
+  ],
+  "baseline_test": {
+    "mae_lakh": 13.267985059703147,
+    "rmse_lakh": 35.391361797788505,
+    "r2_lakh": 0.5858526506820056,
+    "mape": 0.45218136668516273,
+    "median_ape": 0.2222222222222222,
+    "within_10pct": 0.2763745871381387,
+    "within_20pct": 0.46599961142413054,
+    "mae_log": 0.31675833953526206,
+    "rmse_log": 0.4581694291765311,
+    "r2_log": 0.6724942312320372
+  },
+  "test": {
+    "mae_lakh": 3.7482742606436372,
+    "rmse_lakh": 11.6912791759628,
+    "r2_lakh": 0.9548056233531469,
+    "mape": 0.14232080935125252,
+    "median_ape": 0.06600787932216523,
+    "within_10pct": 0.6560132115795609,
+    "within_20pct": 0.8777928890615893,
+    "mae_log": 0.09682238946979335,
+    "rmse_log": 0.17680469710485164,
+    "r2_log": 0.9512298226077365
+  },
+  "interval": {
+    "method": "split conformal on out-of-fold log residuals (10th/90th)",
+    "q_low": -0.14104744563775637,
+    "q_high": 0.14350137193161988,
+    "oof_coverage": {
+      "coverage": 0.7999854269892159,
+      "mean_width_lakh": 11.933472585637086,
+      "median_width_lakh": 8.922533465934052,
+      "mean_width_to_price": 0.3168078388924014
+    },
+    "test": {
+      "coverage": 0.8049349135418691,
+      "mean_width_lakh": 11.881491259663907,
+      "median_width_lakh": 8.902250446786713,
+      "mean_width_to_price": 0.31516526156247354
+    }
+  },
+  "deal_labels_oof": {
+    "FAIR": 27159,
+    "OVERPRICED": 7438,
+    "UNDERPRICED": 6575
+  },
+  "perturbation": {
+    "accuracy": 0.8205103296418625,
+    "macro_f1": 0.816196387028183,
+    "per_class": {
+      "UNDERPRICED": {
+        "precision": 0.8384264137688795,
+        "recall": 0.9275306003497182,
+        "f1": 0.8807305599114473,
+        "support": 10294
+      },
+      "FAIR": {
+        "precision": 0.8021808699774802,
+        "recall": 0.6574703710899553,
+        "f1": 0.7226522876514868,
+        "support": 10294
+      },
+      "OVERPRICED": {
+        "precision": 0.8160441349371439,
+        "recall": 0.8765300174859141,
+        "f1": 0.8452063135216149,
+        "support": 10294
+      }
+    },
+    "confusion_matrix": [
+      [
+        9548,
+        596,
+        150
+      ],
+      [
+        1642,
+        6768,
+        1884
+      ],
+      [
+        198,
+        1073,
+        9023
+      ]
+    ],
+    "labels": [
+      "UNDERPRICED",
+      "FAIR",
+      "OVERPRICED"
+    ],
+    "by_shift": {
+      "UNDERPRICED": {
+        "recall": 0.9275306003497182,
+        "precision": 1.0
+      },
+      "FAIR": {
+        "recall": 0.6574703710899553,
+        "precision": 1.0
+      },
+      "OVERPRICED": {
+        "recall": 0.8765300174859141,
+        "precision": 1.0
+      }
+    }
+  },
+  "permutation_importance": [
+    {
+      "feature": "car_age",
+      "importance_mae": 16.96389633689372,
+      "std": 0.3279547896388791
+    },
+    {
+      "feature": "engine_cc",
+      "importance_mae": 15.11718721301651,
+      "std": 0.5799380160963014
+    },
+    {
+      "feature": "model_name",
+      "importance_mae": 8.012956218193054,
+      "std": 0.22773505707928127
+    },
+    {
+      "feature": "make",
+      "importance_mae": 5.367131408445994,
+      "std": 0.12474276322804326
+    },
+    {
+      "feature": "transmission_auto",
+      "importance_mae": 5.246241268038432,
+      "std": 0.361888102386767
+    },
+    {
+      "feature": "log_km",
+      "importance_mae": 1.5755103706970215,
+      "std": 0.10217330424787711
+    },
+    {
+      "feature": "fuel",
+      "importance_mae": 0.6247073727874755,
+      "std": 0.07179232006123933
+    },
+    {
+      "feature": "km_per_year",
+      "importance_mae": 0.3397498541959127,
+      "std": 0.03856158127098168
+    },
+    {
+      "feature": "is_electric",
+      "importance_mae": 0.3057265966835024,
+      "std": 0.004003254113403155
+    },
+    {
+      "feature": "variant_tier",
+      "importance_mae": 0.29598272108840984,
+      "std": 0.04584759855101327
+    },
+    {
+      "feature": "is_hybrid",
+      "importance_mae": 0.11953809816360472,
+      "std": 0.024866109211415074
+    },
+    {
+      "feature": "battery_kwh",
+      "importance_mae": -0.01473350645955449,
+      "std": 0.0075478721861445535
+    }
+  ],
+  "versions": {
+    "python": "3.12.3",
+    "carval": "0.1.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "lightgbm": "4.7.0",
+    "xgboost": "3.4.1",
+    "catboost": "1.2.10",
+    "matplotlib": "3.11.2",
+    "shap": "0.52.0"
+  },
+  "best_params": {
+    "model__subsample": 0.85,
+    "model__n_estimators": 400,
+    "model__max_depth": 7,
+    "model__learning_rate": 0.1
+  }
+}
