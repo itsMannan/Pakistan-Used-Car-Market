@@ -1,0 +1,8 @@
+model,cv_mae_mean,cv_mae_std,best_params
+xgboost,3.925948259060636,0.08081286772574882,"{'model__subsample': 0.85, 'model__n_estimators': 400, 'model__max_depth': 7, 'model__learning_rate': 0.1}"
+lightgbm,4.222434871503025,0.23414265020108355,"{'model__num_leaves': 63, 'model__n_estimators': 300, 'model__min_child_samples': 20, 'model__learning_rate': 0.05}"
+catboost,4.381155059177166,0.17469931622616253,"{'model__learning_rate': 0.08, 'model__iterations': 400, 'model__depth': 8}"
+hist_gradient_boosting,4.3960664199733,0.18289477058444603,"{'model__min_samples_leaf': 15, 'model__max_iter': 350, 'model__max_depth': 10, 'model__learning_rate': 0.1}"
+ridge,6.538009403601552,0.2169234725775127,{'model__alpha': 0.1}
+random_forest,7.9346825007029125,0.23358757165440444,"{'model__n_estimators': 180, 'model__min_samples_leaf': 2, 'model__max_depth': 18}"
+median_make_model,13.64923518943264,0.21942186924395898,
